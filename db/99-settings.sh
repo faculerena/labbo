@@ -4,6 +4,11 @@ REPLACE INTO emulator_settings (\`key\`, \`value\`) VALUES
     ('websockets.whitelist', '${GAME_DOMAIN}'),
     ('ws.nitro.ip.header', '${WS_IP_HEADER}'),
     ('console.mode', '0'),
+    -- word filter is English-centric and mangles Spanish (e.g. "como")
+    ('hotel.wordfilter.enabled', '0'),
+    ('hotel.wordfilter.rooms', '0'),
+    ('hotel.wordfilter.messenger', '0'),
+    ('hotel.wordfilter.automute', '0'),
     ('camera.url', 'https://${ASSETS_DOMAIN}/usercontent/camera/'),
     ('imager.location.output.camera', '/app/assets/usercontent/camera/'),
     ('imager.location.output.thumbnail', '/app/assets/usercontent/camera/thumbnail/'),
