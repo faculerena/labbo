@@ -158,6 +158,9 @@ services:
       NITRO_CLIENT_PATH: https://${GAME_DOMAIN}
       THEME: ${CMS_THEME:-dusk}
       ASSETS_DOMAIN: ${ASSETS_DOMAIN}
+      # must be strings, not unset: AtomCMS builds the Turnstile client on every registration
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
     volumes:
       - cms-storage:/var/www/html/storage/app/public
       - cms-logs:/var/www/html/storage/logs
