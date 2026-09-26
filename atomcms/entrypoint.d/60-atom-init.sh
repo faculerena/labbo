@@ -19,6 +19,8 @@ $db = new PDO(
 );
 $assets = 'https://' . getenv('ASSETS_DOMAIN');
 $settings = [
+    // the /game/nitro page iframes this, not NITRO_CLIENT_PATH
+    'nitro_path' => 'https://' . getenv('GAME_DOMAIN'),
     'avatar_imager' => "$assets/api/imager/?figure=",
     'badges_path' => "$assets/swf/c_images/album1584",
     'group_badge_path' => "$assets/usercontent/badgeparts/generated",
