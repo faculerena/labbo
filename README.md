@@ -48,6 +48,8 @@ What happens automatically on the first deploy:
 
 ## Operating notes
 
+- **Free hotel.** `db/07-free-hotel.sql` gives every rank infinite credits, duckets and diamonds, so purchases cost nothing, and removes the HC and rank locks from the catalog. It runs automatically on the first DB init. To apply it to an existing DB, run `mysql -uarcturus -p"$MYSQL_PASSWORD" arcturus < /docker-entrypoint-initdb.d/07-free-hotel.sql` in the `db` container, then restart `arcturus`.
+
 - **Changing a domain later.** `nitro` and `cms` pick up new domains on redeploy. The emulator settings are only written on the first DB init, so after a domain change you also need to update the settings by hand:
   ```sql
   UPDATE emulator_settings SET value = 'new.game.domain' WHERE `key` = 'websockets.whitelist';

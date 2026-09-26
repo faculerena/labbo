@@ -9,6 +9,6 @@ ADD "${SQL_URL}/3_0_0%20to%203_5_0.sql" /docker-entrypoint-initdb.d/02-3_0_0-to-
 ADD "${SQL_URL}/3_5_0%20to%204_0_0.sql" /docker-entrypoint-initdb.d/03-3_5_0-to-4_0_0.sql
 ADD "${SQL_URL}/4_0_0_pets_EN.sql" /docker-entrypoint-initdb.d/04-pets_EN.sql
 ADD "${SQL_URL}/4_0_0_permissions.sql" /docker-entrypoint-initdb.d/05-permissions.sql
-COPY 06-perms_groups.sql 99-settings.sh /docker-entrypoint-initdb.d/
+COPY 06-perms_groups.sql 07-free-hotel.sql 99-settings.sh /docker-entrypoint-initdb.d/
 # upstream SQL quirks the mysql CLI rejects: "--comment" without space, hardcoded `aurora` schema
 RUN sed -i -e 's/^--\([^ -]\)/-- \1/' -e 's/`aurora`\.//g' /docker-entrypoint-initdb.d/*.sql && chmod 644 /docker-entrypoint-initdb.d/*
