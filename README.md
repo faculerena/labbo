@@ -62,6 +62,7 @@ What happens automatically on the first deploy:
 - **Upstream quirks patched here:**
   - Arcturus's `ms4/dev` branch was renamed to `archived/ms4/dev`, and upstream's Dockerfile no longer builds because of it.
   - Two upstream SQL files break under the `mysql` CLI: one has `--comment` lines without a space, the other a hardcoded `aurora` schema name. Both are fixed during the image build.
-- **Not included:** upstream's optional "update to latest production assets" (habbo-downloader) and translation scripts. The default pack is enough to run the hotel. See upstream's README if you want newer furni.
+- **2022 catalog (applied by hand, not on fresh installs).** `db/updates/catalog_2022_merge.sql` copies upstream's `catalog_2022.sql` into the live tables; the SQL comments in that file describe the steps. It only makes sense together with the newer furni files: download current furni with `habbo-downloader` from a home connection (habbo.com blocks datacenter IPs), convert the ones missing on the server, upload them along with their icons, and add the new ids to `FurnitureData.json` without removing existing entries.
+- **Translation scripts** from upstream are not included.
 
 Habbo assets are © Sulake. Keep the hotel private or non-commercial.
