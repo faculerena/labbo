@@ -1,5 +1,5 @@
 #!/bin/sh
-# One-shot: download default SWF pack + Nitro assets into the shared volume and convert figures/effects/pets.
+# One-shot: download default SWF pack + Nitro assets into the shared volume and convert figures/effects/pets/furniture.
 # Needs the `assets` nginx service up, since configuration.json fetches SWFs from http://assets/.
 set -eu
 cd /data
@@ -16,6 +16,8 @@ git clone --depth 1 https://git.mc8051.de/nitro/default-assets.git assets
 wget -qO /tmp/room.nitro.zip https://git.mc8051.de/attachments/e948e603-d0ea-4948-b313-e8290a1c4bc9
 unzip -o /tmp/room.nitro.zip -d assets/bundled/generic
 rm -rf swf/.git assets/.git /tmp/room.nitro.zip
+# the client looks for furni icons next to the SWFs, the pack ships them in icons/
+cp -n swf/dcr/hof_furni/icons/* swf/dcr/hof_furni/
 
 ln -sfn /data/assets /app/assets
 cd /app && node dist/Main.js

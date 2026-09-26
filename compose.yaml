@@ -13,6 +13,9 @@ x-db-creds: &db-creds
 services:
   db:
     build: ./db
+    # Arcturus' room queries break under MySQL 8's default ONLY_FULL_GROUP_BY/strict mode.
+    # Laravel (cms) sets its own session sql_mode, so this only loosens the emulator.
+    command: --sql-mode=NO_ENGINE_SUBSTITUTION
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: arcturus
