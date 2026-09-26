@@ -20,5 +20,11 @@ rm -rf swf/.git assets/.git /tmp/room.nitro.zip
 ln -sfn /data/assets /app/assets
 cd /app && node dist/Main.js
 
+# the converter logs its errors and still exits 0
+if [ ! -f /data/assets/gamedata/FigureData.json ] || [ -z "$(ls /data/assets/bundled/figure 2>/dev/null)" ]; then
+    echo "conversion failed, see errors above" >&2
+    exit 1
+fi
+
 touch /data/.initialized
 echo "assets initialized"

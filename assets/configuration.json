@@ -2,7 +2,7 @@
   "flash.client.url": "http://assets/swf/gordon/PRODUCTION/",
   "furnidata.load.url": "http://assets/swf/gamedata/furnidata.xml",
   "productdata.load.url": "http://assets/swf/gamedata/productdata.txt",
-  "figuredata.load.url": "https://www.habbo.com/gamedata/figuredata/1",
+  "figuredata.load.url": "http://assets/swf/gamedata/figuredata.xml",
   "figuremap.load.url": "http://assets/swf/gamedata/figuremap.xml",
   "effectmap.load.url": "http://assets/swf/gamedata/effectmap.xml",
   "dynamic.download.pet.url": "${flash.client.url}%className%.swf",
