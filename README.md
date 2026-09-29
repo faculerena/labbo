@@ -27,15 +27,17 @@ What happens automatically on the first deploy:
 ## Deploy on Dokploy
 
 1. **DNS.** Create A records for all four domains, pointing at the server.
-2. **Push this repo** to GitHub or GitLab (or any git remote Dokploy can reach).
-3. In Dokploy, open a project, choose **Create Service → Compose**, and pick the **Docker Compose** type (not Stack). Point it at the repo and use `compose.yaml` as the compose path.
+2. **Images.** The server never builds: `.github/workflows/images.yml` builds each image on GitHub's runners and pushes it to `ghcr.io/<owner>/labbo-*` (public). Push to GitHub and run the workflow once with **Rebuild every image**. In a fork, change the `ghcr.io/faculerena/` prefix in `compose.yaml`.
+3. In Dokploy, open a project, choose **Create Service → Compose**, and pick the **Docker Compose** type (not Stack). Point it at the repo and use `compose.yaml` as the compose path. Then:
+   - Keep **Auto Deploy** on, and set **Watch Paths** to `.dokploy-deploy`. No real commit touches that path, so plain pushes are skipped; CI deploys once the images are pushed.
+   - Copy the compose **deploy webhook** URL into a repo secret named `DOKPLOY_WEBHOOK`.
 4. **Environment tab.** Paste `.env.example` and fill it in:
    ```sh
    openssl rand -hex 24                   # MYSQL_ROOT_PASSWORD, then run again for MYSQL_PASSWORD
    echo "base64:$(openssl rand -base64 32)"   # APP_KEY
    ```
 5. **Domains tab.** Add the four domains from the table above, with HTTPS on and Let's Encrypt as the certificate provider. For `arcturus`, the port is **2096**. Traefik passes the websocket upgrade through on its own; the client connects to `wss://WS_DOMAIN`.
-6. **Deploy.** The first build compiles Java, Node and PHP, and `assets-init` downloads GBs, so expect a long wait. Watch the logs:
+6. **Deploy.** Click Deploy once (later deploys come from CI). The server only pulls images, but `assets-init` downloads and converts GBs of assets, so expect a long wait. Watch the logs:
    - `db`: wait for `ready for connections ... port: 3306`.
    - `assets-init`: it ends with `assets initialized` and then exits. That exit is expected.
    - `cms`: look for `AtomCMS initialized`.
