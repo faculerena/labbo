@@ -44,6 +44,8 @@ jobs:
             changed=$(git ls-files)
           else
             changed=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
+            # a changed workflow can change how every image is built or tagged
+            grep -q '^\.github/workflows/images\.yml$' <<<"$changed" && changed=$(git ls-files)
           fi
           images=()
           for name in "${!ctx[@]}"; do
