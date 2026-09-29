@@ -2,7 +2,8 @@
 -- live ms4 schema. The 2022 items_base is a superset of the base one (same ids, same furni), so owned
 -- items are unaffected. Run as root with catalog_2022.sql already loaded into a scratch schema `cat2022`:
 --   mysql -uroot -p -e 'CREATE DATABASE cat2022' && mysql -uroot -p cat2022 < catalog_2022.sql
---   mysql -uroot -p arcturus < catalog_2022_merge.sql && mysql -uroot -p arcturus < 07-free-hotel.sql
+--   mysql -uroot -p arcturus < catalog_2022_merge.sql && mysql -uroot -p arcturus < catalog_2022_repair.sql
+--   mysql -uroot -p arcturus < catalog_2022_hotfix.sql && mysql -uroot -p arcturus < 07-free-hotel.sql
 --   mysql -uroot -p -e 'DROP DATABASE cat2022'
 -- then restart arcturus.
 -- - allow_* are enum('0','1') there and tinyint here: compare, don't copy (an enum copies as its index)
