@@ -1,0 +1,105 @@
+# Builds the hotel images on GitHub's runners (the server is too small to build them) and pushes them to
+# ghcr.io. Only images whose folder changed are rebuilt. On main, it then triggers the Dokploy deploy.
+#
+# Dokploy side: Auto Deploy stays on (its webhook refuses otherwise) and Watch Paths is set to
+# `.dokploy-deploy`, a path no real commit touches, so plain pushes are skipped and only the call below,
+# which claims to modify that path, deploys. Needs repo secret DOKPLOY_WEBHOOK (the compose deploy webhook URL).
+name: images
+
+on:
+  push:
+    branches: [main, ci]
+  workflow_dispatch:
+    inputs:
+      all:
+        description: Rebuild every image
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: images-${{ github.ref }}
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      images: ${{ steps.pick.outputs.images }}
+      deploy: ${{ steps.pick.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: pick
+        env:
+          BEFORE: ${{ github.event.before }}
+          ALL: ${{ github.event_name == 'workflow_dispatch' && inputs.all }}
+        run: |
+          # image name -> build context
+          declare -A ctx=([db]=db [arcturus]=arcturus [assets-init]=assets [imager]=imager [nitro]=nitro [cms]=atomcms)
+          if [ "$ALL" = true ] || [ -z "$BEFORE" ] || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            changed=$(git ls-files)
+          else
+            changed=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
+          fi
+          images=()
+          for name in "${!ctx[@]}"; do
+            grep -q "^${ctx[$name]}/" <<<"$changed" && images+=("\"$name\"")
+          done
+          list="[$(IFS=,; echo "${images[*]}")]"
+          # compose.yaml and the assets nginx config are read at deploy time, no image needed
+          deploy=false
+          { [ "$list" != "[]" ] || grep -q -E '^(compose\.yaml|assets/nginx/)' <<<"$changed"; } && deploy=true
+          echo "images=$list" >> "$GITHUB_OUTPUT"
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+          echo "images=$list deploy=$deploy"
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.images != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ${{ fromJSON(needs.changes.outputs.images) }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: ctx
+        run: |
+          declare -A ctx=([db]=db [arcturus]=arcturus [assets-init]=assets [imager]=imager [nitro]=nitro [cms]=atomcms)
+          echo "path=${ctx[${{ matrix.image }}]}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ${{ steps.ctx.outputs.path }}
+          push: true
+          # :latest only from main; the ci branch gets :ci so it can't reach production
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/labbo-${{ matrix.image }}:${{ github.ref_name == 'main' && 'latest' || 'ci' }}
+            ghcr.io/${{ github.repository_owner }}/labbo-${{ matrix.image }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+  deploy:
+    needs: [changes, build]
+    if: >-
+      always() && github.ref == 'refs/heads/main' && needs.changes.outputs.deploy == 'true'
+      && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          WEBHOOK: ${{ secrets.DOKPLOY_WEBHOOK }}
+        run: |
+          body=$(jq -n --arg sha "$GITHUB_SHA" '{ref: "refs/heads/main", commits: [{modified: [".dokploy-deploy"]}], head_commit: {id: $sha, message: "CI: images built"}}')
+          code=$(curl -sS -o /tmp/resp -w '%{http_code}' -X POST "$WEBHOOK" -H 'Content-Type: application/json' -H 'X-GitHub-Event: push' -d "$body")
+          cat /tmp/resp; echo
+          [ "$code" -ge 200 ] && [ "$code" -lt 300 ]

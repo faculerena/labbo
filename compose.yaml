@@ -1,4 +1,6 @@
 # Dokploy compose for a Nitro + Arcturus Morningstar + AtomCMS hotel.
+# Images are built by .github/workflows/images.yml (the server never builds); pull_policy: always makes
+# every deploy fetch the current :latest.
 # No published ports: attach domains in Dokploy's "Domains" tab (see README).
 # Services that get a domain declare `networks: [default]` so they keep internal
 # DNS when Dokploy appends dokploy-network.
@@ -12,7 +14,8 @@ x-db-creds: &db-creds
 
 services:
   db:
-    build: ./db
+    image: ghcr.io/faculerena/labbo-db:latest
+    pull_policy: always
     # Arcturus' room queries break under MySQL 8's default ONLY_FULL_GROUP_BY/strict mode.
     # Laravel (cms) sets its own session sql_mode, so this only loosens the emulator.
     command: --sql-mode=NO_ENGINE_SUBSTITUTION
@@ -60,7 +63,8 @@ services:
     restart: unless-stopped
 
   arcturus:
-    build: ./arcturus
+    image: ghcr.io/faculerena/labbo-arcturus:latest
+    pull_policy: always
     environment:
       DB_HOSTNAME: db
       DB_PORT: 3306
@@ -96,7 +100,8 @@ services:
 
   # One-shot: fills the `assets` volume on first deploy (several GB, takes a while). No-op afterwards.
   assets-init:
-    build: ./assets
+    image: ghcr.io/faculerena/labbo-assets-init:latest
+    pull_policy: always
     volumes:
       - assets:/data
     depends_on:
@@ -104,7 +109,8 @@ services:
     restart: "no"
 
   imager:
-    build: ./imager
+    image: ghcr.io/faculerena/labbo-imager:latest
+    pull_policy: always
     environment:
       API_HOST: 0.0.0.0
       API_PORT: 3000
@@ -130,7 +136,8 @@ services:
 
   # Game client (domain: GAME_DOMAIN -> port 80)
   nitro:
-    build: ./nitro
+    image: ghcr.io/faculerena/labbo-nitro:latest
+    pull_policy: always
     environment:
       SOCKET_URL: wss://${WS_DOMAIN:?set WS_DOMAIN}
       ASSETS_URL: https://${ASSETS_DOMAIN}
@@ -140,7 +147,8 @@ services:
 
   # Website + registration + housekeeping (domain: CMS_DOMAIN -> port 8080)
   cms:
-    build: ./atomcms
+    image: ghcr.io/faculerena/labbo-cms:latest
+    pull_policy: always
     environment:
       <<: *db-creds
       DB_CONNECTION: mysql
